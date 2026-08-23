@@ -1,0 +1,25 @@
+name: smoke
+
+# The smoke test needs no Google credentials: it starts the server over stdio,
+# lists the tools, and checks that an unauthorised call returns the instructional
+# message instead of crashing.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ["18", "20", "22"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run smoke

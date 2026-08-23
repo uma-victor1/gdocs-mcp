@@ -1,0 +1,50 @@
+{
+  "name": "gdocs-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Local MCP server: read Google Docs and their comment threads, push Markdown back in place.",
+  "license": "MIT",
+  "author": "Uma Victor",
+  "homepage": "https://github.com/uma-victor1/gdocs-mcp#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uma-victor1/gdocs-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/uma-victor1/gdocs-mcp/issues"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "claude-code",
+    "google-docs",
+    "google-drive",
+    "comments",
+    "markdown"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "bin": { "gdocs-mcp": "server.mjs" },
+  "files": [
+    "server.mjs",
+    "google.mjs",
+    "auth.mjs",
+    "smoke.mjs",
+    "call.mjs",
+    "install.sh",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "auth": "node auth.mjs",
+    "smoke": "node smoke.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@google-cloud/local-auth": "^3.0.1",
+    "googleapis": "^176.0.0",
+    "zod": "^3.25.0"
+  }
+}

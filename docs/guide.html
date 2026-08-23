@@ -1,0 +1,533 @@
+<title>Google Docs Review Loop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  /* ---- tokens: complete light palette on bare :root ---- */
+  :root {
+    --paper:      #FCFCFB;
+    --surface:    #F2F3F7;
+    --surface-2:  #E9EBF2;
+    --ink:        #14161D;
+    --ink-2:      #4A4F5E;
+    --ink-3:      #787E8E;
+    --rule:       #DDDFE8;
+    --rule-soft:  #EAECF2;
+    --accent:     #2C3E9E;
+    --accent-2:   #4A5CBE;
+    --accent-bg:  #E9ECF9;
+    --caution:    #8F5406;
+    --caution-bg: #FAF0DE;
+    --caution-ru: #E3CFA6;
+    --danger:     #99281D;
+    --shadow:     0 1px 2px rgba(20,22,29,.05), 0 8px 24px -16px rgba(20,22,29,.25);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #0F1117;
+      --surface:    #171A22;
+      --surface-2:  #1E222C;
+      --ink:        #E9EBF1;
+      --ink-2:      #A9AFC0;
+      --ink-3:      #767C8C;
+      --rule:       #272B36;
+      --rule-soft:  #1E222C;
+      --accent:     #95A5F7;
+      --accent-2:   #B3BEFA;
+      --accent-bg:  #1A2042;
+      --caution:    #E2AC63;
+      --caution-bg: #262013;
+      --caution-ru: #4A3B22;
+      --danger:     #E88376;
+      --shadow:     0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:      #0F1117;
+    --surface:    #171A22;
+    --surface-2:  #1E222C;
+    --ink:        #E9EBF1;
+    --ink-2:      #A9AFC0;
+    --ink-3:      #767C8C;
+    --rule:       #272B36;
+    --rule-soft:  #1E222C;
+    --accent:     #95A5F7;
+    --accent-2:   #B3BEFA;
+    --accent-bg:  #1A2042;
+    --caution:    #E2AC63;
+    --caution-bg: #262013;
+    --caution-ru: #4A3B22;
+    --danger:     #E88376;
+    --shadow:     0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-size: 16.5px;
+    line-height: 1.62;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 62rem;
+    margin: 0 auto;
+    padding: 0 1.5rem 6rem;
+  }
+
+  /* ---- margin-rail grid: labels sit in the margin, like annotations ---- */
+  .row {
+    display: grid;
+    grid-template-columns: 8.5rem minmax(0, 1fr);
+    gap: 0 2.5rem;
+    align-items: start;
+  }
+  .rail {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .72rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: .55rem;
+    text-align: right;
+  }
+  .rail .num {
+    display: block;
+    font-family: Newsreader, Georgia, serif;
+    font-size: 2.1rem;
+    line-height: 1;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .col { min-width: 0; }
+  .measure { max-width: 40rem; }
+
+  @media (max-width: 46rem) {
+    .row { grid-template-columns: 1fr; gap: .35rem; }
+    .rail { text-align: left; padding-top: 0; }
+    .rail .num { display: inline-block; font-size: 1.5rem; margin-right: .5rem; vertical-align: -.15rem; }
+  }
+
+  /* ---- masthead ---- */
+  header.masthead {
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 3.5rem;
+    padding: 4.5rem 0 3rem;
+  }
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .74rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 1rem;
+  }
+  h1 {
+    font-family: Newsreader, Georgia, serif;
+    font-weight: 500;
+    font-size: clamp(2.5rem, 6vw, 3.9rem);
+    line-height: 1.04;
+    letter-spacing: -.015em;
+    text-wrap: balance;
+    margin: 0 0 1.1rem;
+  }
+  .lede {
+    font-size: 1.16rem;
+    color: var(--ink-2);
+    max-width: 38rem;
+    margin: 0;
+    text-wrap: pretty;
+  }
+  .lede strong { color: var(--ink); font-weight: 600; }
+
+  /* ---- sections ---- */
+  section { margin-bottom: 3.25rem; }
+  h2 {
+    font-family: Newsreader, Georgia, serif;
+    font-weight: 500;
+    font-size: 1.85rem;
+    line-height: 1.2;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+    margin: 0 0 .85rem;
+  }
+  h3 {
+    font-size: .95rem;
+    font-weight: 600;
+    letter-spacing: -.005em;
+    margin: 0 0 .4rem;
+  }
+  p { margin: 0 0 1rem; text-wrap: pretty; }
+  p:last-child { margin-bottom: 0; }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+  code {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .855em;
+    background: var(--surface);
+    border: 1px solid var(--rule-soft);
+    border-radius: 3px;
+    padding: .08em .34em;
+    white-space: nowrap;
+  }
+
+  /* ---- code blocks ---- */
+  pre {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .845rem;
+    line-height: 1.72;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    padding: .95rem 1.1rem;
+    overflow-x: auto;
+    margin: 0 0 1rem;
+  }
+  pre code {
+    background: none; border: 0; padding: 0; font-size: inherit; white-space: pre;
+  }
+  pre .c { color: var(--ink-3); }
+  pre .p { color: var(--accent); }
+
+  ul, ol { margin: 0 0 1rem; padding-left: 1.15rem; }
+  li { margin-bottom: .4rem; }
+  li:last-child { margin-bottom: 0; }
+
+  /* ---- comparison panels ---- */
+  .panels {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1rem;
+  }
+  .panel {
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: var(--surface);
+    padding: 1.1rem 1.2rem;
+  }
+  .panel.now { background: var(--accent-bg); border-color: color-mix(in srgb, var(--accent) 22%, var(--rule)); }
+  .panel h3 { color: var(--ink-3); font-family: "IBM Plex Mono", monospace; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; margin-bottom: .7rem; }
+  .panel.now h3 { color: var(--accent); }
+  .panel ol { margin: 0; padding-left: 1.1rem; font-size: .92rem; color: var(--ink-2); }
+  .panel.now ol { color: var(--ink); }
+
+  /* ---- table ---- */
+  .scroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; min-width: 34rem; }
+  th, td { text-align: left; padding: .68rem .95rem; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+  thead th {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .7rem; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-3); background: var(--surface); border-bottom: 1px solid var(--rule);
+    font-weight: 500;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td:first-child { white-space: nowrap; }
+  td code { background: none; border: 0; padding: 0; color: var(--accent); font-weight: 500; }
+  .tag {
+    display: inline-block;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .66rem; letter-spacing: .07em; text-transform: uppercase;
+    padding: .1rem .42rem; border-radius: 3px; margin-left: .4rem;
+    border: 1px solid currentColor; vertical-align: .08em;
+  }
+  .tag.safe { color: var(--accent); }
+  .tag.care { color: var(--caution); }
+
+  /* ---- caution note ---- */
+  .note {
+    border: 1px solid var(--caution-ru);
+    background: var(--caution-bg);
+    border-radius: 6px;
+    padding: 1.15rem 1.3rem;
+  }
+  .note .label {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .7rem; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--caution); margin: 0 0 .55rem;
+  }
+  .note p { color: var(--ink); }
+  .note strong { color: var(--caution); }
+
+  /* ---- steps ---- */
+  .step { padding: 1.6rem 0; border-top: 1px solid var(--rule-soft); }
+  .step:first-of-type { border-top: 0; padding-top: .4rem; }
+
+  /* ---- footnote ---- */
+  footer {
+    border-top: 1px solid var(--rule);
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    font-size: .88rem;
+    color: var(--ink-3);
+  }
+  footer code { font-size: .82em; }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="row">
+      <div class="rail">MCP&nbsp;server<br>for Claude&nbsp;Code</div>
+      <div class="col">
+        <p class="eyebrow">gdocs</p>
+        <h1>Google Docs review loop</h1>
+        <p class="lede">Claude Code reads your Google Doc <strong>and its comment threads</strong>, then writes corrections back into the same Doc at the same URL. No pasting the draft into Docs. No pasting reviewer feedback back into the terminal.</p>
+      </div>
+    </div>
+  </header>
+
+  <section>
+    <div class="row">
+      <div class="rail">The&nbsp;point</div>
+      <div class="col">
+        <h2>What it removes</h2>
+        <p class="measure">Markdown in your repo stays the source of truth. The Doc is only a review surface. Everything between those two facts used to be manual.</p>
+        <div class="panels">
+          <div class="panel">
+            <h3>Before</h3>
+            <ol>
+              <li>Copy Markdown out of the editor</li>
+              <li>Paste into a new Google Doc</li>
+              <li>Reviewers comment</li>
+              <li>Read each comment, retype it into the terminal</li>
+              <li>Fix, then re-paste the whole draft into a fresh Doc</li>
+              <li>Old comment threads are stranded on the old Doc</li>
+            </ol>
+          </div>
+          <div class="panel now">
+            <h3>After</h3>
+            <ol>
+              <li>Ask Claude to read the Doc</li>
+              <li>Comments arrive with the exact sentence each one is anchored to</li>
+              <li>Fix the Markdown in your repo</li>
+              <li>Push back into the same Doc, same URL</li>
+              <li>Reply to reviewers in their own threads</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="row">
+      <div class="rail">Before&nbsp;you<br>start</div>
+      <div class="col measure">
+        <h2>Requirements</h2>
+        <ul>
+          <li>Node 18 or newer</li>
+          <li>The <code>claude</code> CLI</li>
+          <li>A Google account, plus roughly ten minutes in Google Cloud Console</li>
+        </ul>
+        <p>Setup is a strict sequence — each step depends on the one before it — so the five steps below are numbered rather than listed.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="measure" style="margin-bottom:1.4rem">Setup</h2>
+
+    <div class="step row">
+      <div class="rail"><span class="num">1</span>install</div>
+      <div class="col measure">
+        <h3>Run the installer</h3>
+        <p>From the server's directory. It installs dependencies, verifies the server actually starts, and registers it with Claude Code at <em>user</em> scope so it is available in every project.</p>
+        <pre><code>./install.sh</code></pre>
+      </div>
+    </div>
+
+    <div class="step row">
+      <div class="rail"><span class="num">2</span>google<br>cloud</div>
+      <div class="col measure">
+        <h3>Create a project and enable two APIs</h3>
+        <p>Create a project at <a href="https://console.cloud.google.com/projectcreate">console.cloud.google.com</a>, then under <em>APIs &amp; Services &rsaquo; Library</em> enable both:</p>
+        <ul>
+          <li><strong>Google Docs API</strong> — reading and editing document bodies</li>
+          <li><strong>Google Drive API</strong> — comment threads, Markdown export, in-place upload</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step row">
+      <div class="rail"><span class="num">3</span>consent</div>
+      <div class="col measure">
+        <h3>Configure the OAuth consent screen</h3>
+        <p>User type <strong>External</strong> is correct for a personal Google account. Under <em>Audience</em>, add as a <strong>test user</strong> the exact address you will sign in with.</p>
+        <div class="note" style="margin:1rem 0">
+          <p class="label">Skip this and step 5 fails</p>
+          <p>You get <code>Error 403: access_denied</code> and &ldquo;has not completed the Google verification process&rdquo;. It is not asking you to get the app verified — it is saying <strong>that address is not on the tester list</strong>. Add it, save, retry.</p>
+        </div>
+        <p>Watch which account you use. If you are signed into several Google accounts, the one the browser picks must be the one on the list.</p>
+      </div>
+    </div>
+
+    <div class="step row">
+      <div class="rail"><span class="num">4</span>credentials</div>
+      <div class="col measure">
+        <h3>Download the OAuth client and put it in place</h3>
+        <p>Go to <em>Credentials &rsaquo; Create credentials &rsaquo; OAuth client ID</em>, choose <strong>Desktop app</strong>, and download the JSON. Save it as:</p>
+        <pre><code>~/.config/gdocs-mcp/credentials.json</code></pre>
+        <p>Credentials live outside any repository deliberately, so <code>git add -A</code> can never commit them.</p>
+      </div>
+    </div>
+
+    <div class="step row">
+      <div class="rail"><span class="num">5</span>authorise</div>
+      <div class="col measure">
+        <h3>Grant access, once</h3>
+        <pre><code>npm run auth</code></pre>
+        <p>Your browser opens. Google warns that the app is unverified, which is expected for a one-user app: choose <em>Advanced &rsaquo; Go to &hellip; (unsafe)</em>. The refresh token is written to <code>~/.config/gdocs-mcp/token.json</code> with permissions <code>0600</code>.</p>
+        <p>Restart Claude Code, then confirm:</p>
+        <pre><code>claude mcp list</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="row">
+      <div class="rail">Expect&nbsp;this</div>
+      <div class="col measure">
+        <h2>You will re-authorise weekly</h2>
+        <p>While the consent screen sits in <strong>Testing</strong>, Google expires the refresh token every seven days. That is documented behaviour for external apps in testing, not a fault in the server.</p>
+        <p>There is no way around it for this scope set. <code>auth/drive</code> is a <strong>restricted</strong> scope, and publishing to production with a restricted scope requires a CASA security assessment by a Google-empanelled assessor — disproportionate for a one-person tool.</p>
+        <p>So about once a week a call fails with &ldquo;Authorisation expired&rdquo;. The fix takes fifteen seconds:</p>
+        <pre><code>npm run auth</code></pre>
+        <h3 style="margin-top:1.5rem">Unless you have Google Workspace</h3>
+        <p>If you have a Workspace account, you can avoid this entirely: create the Cloud project under that organisation and set the consent screen user type to <strong>Internal</strong>. Internal apps have no seven-day expiry and no tester list at all.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="row">
+      <div class="rail">Reference</div>
+      <div class="col">
+        <h2>The nine tools</h2>
+        <p class="measure">Every tool accepts either a Google Doc URL or a bare file ID.</p>
+        <div class="scroll">
+          <table>
+            <thead>
+              <tr><th scope="col">Tool</th><th scope="col">What it does</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>find_doc</code></td><td>Search Drive for Docs by title</td></tr>
+              <tr><td><code>read_doc</code></td><td>Document body as Markdown, plus every comment thread with the text it is anchored to</td></tr>
+              <tr><td><code>read_comments</code></td><td>Comment threads only — the cheap &ldquo;any new feedback?&rdquo; check</td></tr>
+              <tr><td><code>replace_text</code></td><td>Exact find-and-replace, in place<span class="tag safe">keeps anchors</span></td></tr>
+              <tr><td><code>append_text</code></td><td>Add a paragraph at the end, with heading level, point size, colour, bold or italic<span class="tag safe">keeps anchors</span></td></tr>
+              <tr><td><code>push_markdown</code></td><td>Replace the entire body from a local file; requires <code>confirm: true</code><span class="tag care">destructive</span></td></tr>
+              <tr><td><code>reply_comment</code></td><td>Post a reply inside a reviewer's thread</td></tr>
+              <tr><td><code>resolve_comment</code></td><td>Resolve a thread with a closing note</td></tr>
+              <tr><td><code>create_doc</code></td><td>New Doc from a Markdown file — once per document</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="row">
+      <div class="rail">Read&nbsp;this<br>one</div>
+      <div class="col measure">
+        <h2>The comment-anchor tradeoff</h2>
+        <div class="note">
+          <p class="label">Why this matters more than it sounds</p>
+          <p>Google anchors every comment to a specific span of text. <strong>Rewrite that span and the thread detaches or auto-resolves</strong> — the reviewer's context is gone, and nobody gets told.</p>
+        </div>
+        <p style="margin-top:1.2rem">So the loop has a shape:</p>
+        <ul>
+          <li><strong>Small fixes use <code>replace_text</code>.</strong> Anchors survive and reviewers keep their context.</li>
+          <li><strong>Adding rather than changing uses <code>append_text</code>.</strong> It only ever inserts at the end, so no existing span moves and nothing can detach.</li>
+          <li><strong>Structural rewrites use <code>push_markdown</code>.</strong> Faster, but expect thread loss. It reports how many open threads existed beforehand, so the damage is visible rather than silent.</li>
+          <li><strong>Reply before you rewrite.</strong> A reply leaves a record of what changed and why, which is what a reviewer actually wanted from the thread.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="row">
+      <div class="rail">In&nbsp;practice</div>
+      <div class="col measure">
+        <h2>What you type</h2>
+        <p>Plain requests. Claude picks the tools.</p>
+        <pre><code><span class="p">&gt;</span> any new comments on the draft doc?
+
+<span class="p">&gt;</span> pull the comments, fix draft.md for each one,
+  then reply on each thread saying what changed
+
+<span class="p">&gt;</span> push the updated draft.md back to the doc</code></pre>
+        <p>Because the repo file is the source of truth, the useful habit is to fix the Markdown first and push second. The Doc is downstream of your editor, never the other way round.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="row">
+      <div class="rail">Trust</div>
+      <div class="col measure">
+        <h2>Why a hand-built server</h2>
+        <p>An MCP server holding a Google Docs OAuth token can read and rewrite <em>every document in the account</em>, and it runs as local code on your machine.</p>
+        <p>There is no first-party Google or Anthropic Docs MCP. Every published one is a third-party package from an individual publisher. This server is roughly 250 lines built on Anthropic's MCP SDK and Google's own client library — small enough to read in full before you trust it with that token.</p>
+        <h3 style="margin-top:1.5rem">Turning writes off</h3>
+        <p>Reads keep working, every write tool refuses:</p>
+        <pre><code>claude mcp remove gdocs -s user
+claude mcp add gdocs -s user \
+  -e GDOCS_MCP_READONLY=1 \
+  -- node "$PWD/server.mjs"</code></pre>
+        <p>Useful when the Doc belongs to somebody else.</p>
+        <h3 style="margin-top:1.5rem">Revoking access</h3>
+        <p>Revoke at <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>, then delete <code>~/.config/gdocs-mcp/token.json</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="row">
+      <div class="rail">When&nbsp;it<br>breaks</div>
+      <div class="col">
+        <h2>Troubleshooting</h2>
+        <div class="scroll">
+          <table>
+            <thead>
+              <tr><th scope="col">Symptom</th><th scope="col">Fix</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>&ldquo;Not authorised yet&rdquo;</td><td>Run <code>npm run auth</code></td></tr>
+              <tr><td><code>403 access_denied</code>, &ldquo;has not completed the Google verification process&rdquo;</td><td>The address you signed in with is not an approved tester. Add it under <em>OAuth consent screen &rsaquo; Audience &rsaquo; Test users</em>, save, retry</td></tr>
+              <tr><td>&ldquo;Authorisation expired&rdquo; after about a week</td><td>Expected in Testing mode. Run <code>npm run auth</code></td></tr>
+              <tr><td><code>accessNotConfigured</code></td><td>Enable the Docs API and Drive API on <em>this</em> Cloud project, wait a minute, retry</td></tr>
+              <tr><td>&ldquo;no refresh token&rdquo;</td><td>Revoke the app at myaccount.google.com/permissions, then re-run <code>npm run auth</code></td></tr>
+              <tr><td>Server missing in Claude Code</td><td>Check <code>claude mcp list</code>, re-run <code>./install.sh</code>, restart Claude Code</td></tr>
+              <tr><td>Doc exports as plain text</td><td>The Doc holds content Google cannot render as Markdown. The content still comes back.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="measure" style="margin-top:1rem">You can always check the server independently of Claude Code with <code>npm run smoke</code>, which starts it and lists its tools.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="row">
+      <div class="rail">Files</div>
+      <div class="col measure">
+        <p><code>server.mjs</code> the eight tools &middot; <code>google.mjs</code> auth and API clients &middot; <code>auth.mjs</code> one-time OAuth &middot; <code>smoke.mjs</code> self-test &middot; <code>install.sh</code> install and register</p>
+      </div>
+    </div>
+  </footer>
+
+</div>

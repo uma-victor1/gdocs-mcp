@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Credentials. These live in ~/.config/gdocs-mcp by default and must never be
+# committed. Listed here as a second line of defence in case GDOCS_MCP_HOME
+# is ever pointed at the repo.
+credentials.json
+token.json
+.env
+.env.*
+
+# OS / editor noise
+.DS_Store
+*.log
+npm-debug.log*
+.idea/
+.vscode/
